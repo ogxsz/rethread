@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ReThread",
-  "version": "1.4.0",
-  "description": "Save, organize and search your AI chats across Claude, ChatGPT, Gemini, Grok, Perplexity and DeepSeek",
+  "version": "1.4.1",
+  "description": "A lightweight bookmark manager for your AI chat conversations. Save, organize and search from a side panel.",
   "permissions": ["storage", "sidePanel", "tabs", "scripting"],
   "host_permissions": [
     "https://claude.ai/*",
