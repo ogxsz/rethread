@@ -1,17 +1,20 @@
-// ReThread Content Script — injected on supported AI chat platforms
-// Platform config loaded from shared/platforms.js (runs before this file)
-// Self-contained (no ES module imports in content scripts)
+// ReThread Content Script — slim detector for the Current Chat Section in the Side Panel.
+// Runs in ISOLATED world. PLATFORMS is provided by shared/platforms.js (loaded first).
+// Reports { platform, chatId, url, title, supported:true } to the service worker; never injects UI.
 
 (function () {
   'use strict';
 
+  // Idempotency guard — if the service worker reinjects us into an already-live tab,
+  // bail out so we don't register duplicate listeners / observers.
+  if (window.__rethread_loaded) return;
+  window.__rethread_loaded = true;
+
   const MSG = {
-    SAVE_CHAT: 'SAVE_CHAT',
-    CHAT_SAVED: 'CHAT_SAVED',
+    CURRENT_CHAT_UPDATE: 'CURRENT_CHAT_UPDATE',
     GET_CURRENT_CHAT: 'GET_CURRENT_CHAT'
   };
 
-  // Detect current platform from shared/platforms.js global
   const hostname = window.location.hostname;
   let currentPlatform = null;
   for (const platform of Object.values(PLATFORMS)) {
@@ -20,159 +23,94 @@
       break;
     }
   }
-
   if (!currentPlatform) return;
 
-  let currentChatId = null;
-  let shadowRoot = null;
-  let buttonEl = null;
-  let hostEl = null;
-  let isSaved = false;
-  let injected = false;
-
-  function getChatIdFromUrl() {
+  function getChatId() {
     const match = window.location.pathname.match(currentPlatform.chatUrlPattern);
     return match ? match[1] : null;
   }
 
-  // ---- Shadow DOM injection ----
-  async function injectButton() {
-    if (injected) return;
-    injected = true;
+  function snapshot() {
+    return {
+      platform: currentPlatform.id,
+      chatId: getChatId(),
+      url: window.location.href,
+      title: currentPlatform.getTitle(),
+      supported: true
+    };
+  }
 
-    hostEl = document.createElement('div');
-    hostEl.id = 'rethread-host';
-    if (currentPlatform.cssClass) {
-      hostEl.classList.add(currentPlatform.cssClass);
-    }
-    shadowRoot = hostEl.attachShadow({ mode: 'closed' });
-
+  function broadcast() {
     try {
-      const cssUrl = chrome.runtime.getURL('content/content-styles.css');
-      const resp = await fetch(cssUrl);
-      const cssText = await resp.text();
-      const style = document.createElement('style');
-      style.textContent = "@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap');\n" + cssText;
-      shadowRoot.appendChild(style);
+      const payload = snapshot();
+      console.log('[ReThread CS] Sending CURRENT_CHAT_UPDATE', payload);
+      chrome.runtime.sendMessage({
+        type: MSG.CURRENT_CHAT_UPDATE,
+        payload
+      }).catch(() => { /* side panel may not be open */ });
     } catch (e) {
-      console.error('ReThread: failed to load styles', e);
-    }
-
-    buttonEl = document.createElement('button');
-    buttonEl.className = 'rt-save-btn rt-save-btn--default';
-    buttonEl.textContent = 'Save';
-    buttonEl.addEventListener('click', handleSaveClick);
-
-    shadowRoot.appendChild(buttonEl);
-
-    // Use platform-specific anchor or fall back to floating (body append)
-    const anchor = currentPlatform.getButtonAnchor();
-    if (anchor) {
-      anchor.insertAdjacentElement(currentPlatform.buttonPosition, hostEl);
-    } else {
-      document.body.appendChild(hostEl);
+      // Extension context invalidated (e.g., during reload) — ignore.
     }
   }
 
-  function removeButton() {
-    if (hostEl && hostEl.parentNode) {
-      hostEl.parentNode.removeChild(hostEl);
-    }
-    hostEl = null;
-    shadowRoot = null;
-    buttonEl = null;
-    injected = false;
-    isSaved = false;
-  }
-
-  function updateButtonState(saved) {
-    isSaved = saved;
-    if (!buttonEl) return;
-    if (saved) {
-      buttonEl.className = 'rt-save-btn rt-save-btn--saved';
-      buttonEl.textContent = 'Saved!';
-    } else {
-      buttonEl.className = 'rt-save-btn rt-save-btn--default';
-      buttonEl.textContent = 'Save';
-    }
-  }
-
-  // ---- Actions ----
-  async function handleSaveClick() {
-    if (isSaved || !currentChatId) return;
-
-    buttonEl.className = 'rt-save-btn rt-save-btn--saving';
-    buttonEl.textContent = 'Saving...';
-
-    try {
-      await chrome.runtime.sendMessage({
-        type: MSG.SAVE_CHAT,
-        chatId: currentChatId,
-        url: window.location.href,
-        title: currentPlatform.getTitle(),
-        messageCount: null,
-        platform: currentPlatform.id
-      });
-    } catch (e) {
-      console.error('ReThread: save failed', e);
-      updateButtonState(false);
-    }
-  }
-
-  async function checkIfSaved(chatId) {
-    try {
-      // Read directly from storage — avoids service worker sleep race condition
-      const data = await chrome.storage.local.get('chats');
-      const chats = data.chats || {};
-      updateButtonState(!!chats[chatId]);
-    } catch (e) {
-      updateButtonState(false);
-    }
-  }
-
-  // ---- Navigation detection ----
-  async function onNavigate() {
-    const chatId = getChatIdFromUrl();
-
-    if (chatId && chatId !== currentChatId) {
-      currentChatId = chatId;
-      if (!injected) await injectButton();
-      updateButtonState(false);
-      checkIfSaved(chatId);
-    } else if (!chatId) {
-      currentChatId = null;
-      removeButton();
-    }
-  }
-
-  // Detect SPA navigation via MutationObserver + popstate
   let lastUrl = window.location.href;
+  let lastTitle = document.title;
 
-  const observer = new MutationObserver(() => {
-    if (window.location.href !== lastUrl) {
+  function maybeBroadcast() {
+    const urlChanged = window.location.href !== lastUrl;
+    const titleChanged = document.title !== lastTitle;
+    if (urlChanged || titleChanged) {
       lastUrl = window.location.href;
-      onNavigate();
+      lastTitle = document.title;
+      broadcast();
+    }
+  }
+
+  // ---- URL-change detection: popstate + history API patch ----
+  // SPAs use history.pushState/replaceState which don't fire popstate; patch to emit a custom
+  // event that we listen to. Patched function still calls the original, so host-page behavior
+  // is unaffected.
+  (function patchHistory() {
+    const origPush = history.pushState;
+    const origReplace = history.replaceState;
+    history.pushState = function () {
+      const result = origPush.apply(this, arguments);
+      window.dispatchEvent(new Event('rt:urlchange'));
+      return result;
+    };
+    history.replaceState = function () {
+      const result = origReplace.apply(this, arguments);
+      window.dispatchEvent(new Event('rt:urlchange'));
+      return result;
+    };
+  })();
+
+  window.addEventListener('rt:urlchange', maybeBroadcast);
+  window.addEventListener('popstate', maybeBroadcast);
+
+  // ---- Title-change detection: observe <title> directly ----
+  // Some platforms update <title> after the first message (chatId already in URL but title
+  // still "New chat"). Observing document.title text via the actual <title> node is more
+  // reliable than scanning document.body mutations.
+  const titleNode = document.querySelector('title');
+  if (titleNode) {
+    new MutationObserver(maybeBroadcast).observe(titleNode, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+  }
+
+  // ---- Side Panel / service worker queries ----
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message && message.type === MSG.GET_CURRENT_CHAT) {
+      const snap = snapshot();
+      console.log('[ReThread CS] Responding to GET_CURRENT_CHAT', snap);
+      sendResponse(snap);
+      return true;
     }
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-  window.addEventListener('popstate', () => {
-    lastUrl = window.location.href;
-    onNavigate();
-  });
-
-  // ---- Message listener ----
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === MSG.CHAT_SAVED && message.chatId === currentChatId) {
-      updateButtonState(true);
-    }
-
-    if (message.type === MSG.GET_CURRENT_CHAT && currentChatId) {
-      handleSaveClick();
-    }
-  });
-
-  // ---- Initial check ----
-  onNavigate();
-
+  // ---- Initial broadcast ----
+  broadcast();
 })();

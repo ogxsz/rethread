@@ -2,7 +2,7 @@
 
 **ReThread — Chrome Extension**
 
-Last updated: March 4, 2026
+Last updated: April 17, 2026
 
 ## Overview
 
@@ -23,12 +23,14 @@ This data never leaves your browser. There is no server, no database, no analyti
 
 ## Data Access
 
-The extension has access to four specific websites:
+The extension has access to the following websites:
 
 - claude.ai
-- chatgpt.com
+- chatgpt.com (and chat.openai.com)
 - gemini.google.com
 - grok.com
+- perplexity.ai (and www.perplexity.ai)
+- chat.deepseek.com
 
 On these sites, the extension reads only two things:
 
@@ -40,7 +42,7 @@ On these sites, the extension reads only two things:
 - Chat message content
 - Authentication tokens or session cookies
 - Personal information (name, email, etc.)
-- Browsing history outside of the four supported sites
+- Browsing history outside of the supported sites
 - Any data from other websites or browser tabs
 
 ## Permissions
@@ -49,13 +51,15 @@ On these sites, the extension reads only two things:
 |------------|---------|
 | `storage` | Save bookmarks locally in the browser |
 | `sidePanel` | Display the bookmark management panel |
-| `host_permissions` | Inject Save button on four supported AI chat sites |
+| `tabs` | Detect which supported AI site is active in the current tab, so the correct chat can be captured |
+| `scripting` | Re-inject the content script into already-open supported tabs after the extension is installed, updated, or reloaded |
+| `host_permissions` | Inject the chat detector on the supported AI chat sites listed above |
 
-No additional permissions are requested.
+No additional permissions are requested. ReThread does **not** request `cookies`, `webRequest`, `history`, `<all_urls>`, `clipboardRead`, or any other permission.
 
 ## Third-Party Services
 
-ReThread does not use any third-party services, APIs, SDKs, or analytics tools. There are no network requests made by the extension.
+ReThread does not use any third-party services, APIs, SDKs, analytics tools, or CDNs. **The extension makes no network requests of any kind** — all assets (fonts, icons, styles, scripts) are bundled with the extension and served locally from the extension package. No data is sent to any external server, including Google, Anthropic, OpenAI, or any font/CDN provider.
 
 ## Data Storage and Security
 

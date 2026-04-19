@@ -1,17 +1,35 @@
 {
   "manifest_version": 3,
   "name": "ReThread",
-  "version": "1.0.0",
-  "description": "Save, organize and search your AI chats across Claude, ChatGPT, Gemini and Grok",
-  "permissions": ["storage", "sidePanel"],
-  "host_permissions": ["https://claude.ai/*", "https://chatgpt.com/*", "https://chat.openai.com/*", "https://gemini.google.com/*", "https://grok.com/*"],
+  "version": "1.4.0",
+  "description": "Save, organize and search your AI chats across Claude, ChatGPT, Gemini, Grok, Perplexity and DeepSeek",
+  "permissions": ["storage", "sidePanel", "tabs", "scripting"],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://grok.com/*",
+    "https://perplexity.ai/*",
+    "https://*.perplexity.ai/*",
+    "https://chat.deepseek.com/*"
+  ],
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["https://claude.ai/*", "https://chatgpt.com/*", "https://chat.openai.com/*", "https://gemini.google.com/*", "https://grok.com/*"],
+      "matches": [
+        "https://claude.ai/*",
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://grok.com/*",
+        "https://perplexity.ai/*",
+        "https://*.perplexity.ai/*",
+        "https://chat.deepseek.com/*"
+      ],
       "js": ["shared/platforms.js", "content/content-script.js"],
       "run_at": "document_idle"
     }
@@ -43,11 +61,5 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["content/content-styles.css"],
-      "matches": ["https://claude.ai/*", "https://chatgpt.com/*", "https://chat.openai.com/*", "https://gemini.google.com/*", "https://grok.com/*"]
-    }
-  ]
+  }
 }

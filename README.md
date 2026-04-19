@@ -2,7 +2,7 @@
 
 **Your AI chats, always within reach.**
 
-Save, organize and search your conversations across Claude, ChatGPT, Gemini and Grok.
+Save, organize and search your conversations across Claude, ChatGPT, Gemini, Grok, Perplexity and DeepSeek.
 
 [Install](#install) · [Features](#features) · [Platforms](#supported-platforms) · [Privacy](#privacy) · [Development](#development) · [License](#license)
 
@@ -36,7 +36,7 @@ Save, organize and search your conversations across Claude, ChatGPT, Gemini and 
 
 **Folders** — Group chats into custom folders to keep things organized.
 
-**Platform filter** — Quickly filter your saved chats by Claude, ChatGPT, Gemini, or Grok.
+**Platform filter** — Quickly filter your saved chats by platform.
 
 **Search** — Find any saved chat by title instantly.
 
@@ -52,6 +52,8 @@ Save, organize and search your conversations across Claude, ChatGPT, Gemini and 
 | ChatGPT | chatgpt.com | ✅ Full support |
 | Gemini | gemini.google.com | ✅ Full support |
 | Grok | grok.com | ✅ Full support |
+| Perplexity | perplexity.ai | ✅ Full support |
+| DeepSeek | chat.deepseek.com | ✅ Full support |
 
 Each platform has a native-feeling Save button styled to match its design language.
 
@@ -77,9 +79,11 @@ ReThread is built with a privacy-first architecture:
 
 - **No server, no accounts, no tracking** — all data stays in your browser's local storage
 - **No chat content access** — only saves URLs and page titles, never reads your conversations
-- **Minimal permissions** — only `storage`, `sidePanel`, and access to the four supported AI domains
+- **No network requests** — all assets (fonts, icons, styles) are bundled with the extension; nothing is fetched from any CDN
 - **No cookies or auth tokens** — content scripts run in isolated world, cannot access page JavaScript
 - **Open source** — inspect every line of code yourself
+
+See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
 
 ### Permissions explained
 
@@ -87,9 +91,11 @@ ReThread is built with a privacy-first architecture:
 |------------|-----|
 | `storage` | Save your bookmarks locally |
 | `sidePanel` | Display the management panel |
-| `host_permissions` | Inject Save button on supported AI sites |
+| `tabs` | Detect which supported AI site is active in the current tab |
+| `scripting` | Re-inject the chat detector into already-open supported tabs after install/update |
+| `host_permissions` | Inject the chat detector on the six supported AI sites |
 
-**Never requested:** `cookies`, `webRequest`, `tabs`, `<all_urls>`, `clipboardRead`, `history`.
+**Never requested:** `cookies`, `webRequest`, `history`, `<all_urls>`, `clipboardRead`.
 
 ---
 
@@ -109,32 +115,35 @@ Total extension size: ~80 KB.
 
 ### Project structure
 
+```
 rethread/
-├── manifest.json            # Extension manifest (MV3)
+├── manifest.json                      # Extension manifest (MV3)
 ├── background/
-│   └── service-worker.js    # Message broker
+│   └── service-worker.js              # Message broker
 ├── content/
-│   ├── content-script.js    # Save button injection
-│   └── content-styles.css   # Shadow DOM styles
+│   └── content-script.js              # Active-chat detector (reports to side panel)
 ├── sidepanel/
-│   ├── sidepanel.html       # Panel markup
-│   ├── sidepanel.js         # Panel logic
-│   └── sidepanel.css        # Panel styles
+│   ├── sidepanel.html                 # Panel markup
+│   ├── sidepanel.js                   # Panel logic
+│   ├── sidepanel-current-chat.js      # Current Chat Section module
+│   ├── sidepanel-settings.js          # Settings module
+│   └── sidepanel.css                  # Panel styles
 ├── shared/
-│   ├── platforms.js         # Platform configs
-│   ├── storage.js           # Storage abstraction
-│   ├── constants.js         # Constants
-│   └── utils.js             # Utilities
-└── icons/                   # Extension & platform icons
+│   ├── platforms.js                   # Platform configs
+│   ├── storage.js                     # Storage abstraction
+│   ├── constants.js                   # Constants
+│   └── utils.js                       # Utilities
+└── icons/                             # Extension & platform icons
+```
 
 ### Adding a new platform
 
-1. Add a config entry to `shared/platforms.js` with hostname, URL pattern, title extractor, and button styles
-2. Add the domain to `manifest.json` in both `host_permissions` and `content_scripts.matches`
-3. Add platform-specific button CSS in `content/content-styles.css` using `:host(.platform-name)` selector
-4. Add the platform icon SVG to `icons/`
+1. Add a config entry to `shared/platforms.js` with hostname, URL pattern, and title extractor
+2. Add the domain to `manifest.json` in both `host_permissions` and `content_scripts.matches`, and mirror it in `SUPPORTED_HOSTS` / `SUPPORTED_MATCHES` in `background/service-worker.js`
+3. Add the platform icon SVG to `icons/` and map it in the Current Chat Section's `PLATFORM_ICON` in `sidepanel/sidepanel-current-chat.js`
+4. Add a platform tag color and chip row entry in `sidepanel/sidepanel.css` / `sidepanel.html`, and append the platform id to `PLATFORM_ORDER` in `sidepanel/sidepanel.js`
 
-That's it — the universal content script handles the rest.
+That's it — the universal content script handles detection.
 
 ### Local development
 

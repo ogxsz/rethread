@@ -1,4 +1,13 @@
-:root {
+/* ========================================================================
+   Theme tokens
+   --------------------------------------------------------------------------
+   Light is the default (on :root and explicit .theme-light).
+   .theme-dark overrides the theme-sensitive tokens.
+   .theme-auto follows the OS via a prefers-color-scheme media query.
+   Platform brand colors (claude/chatgpt/gemini/grok) stay constant.
+   ========================================================================*/
+:root,
+html.theme-light {
   --bg-primary: #F5F2F0;
   --bg-card: #FFFFFF;
   --text-primary: #1A1A18;
@@ -9,11 +18,42 @@
   --notes-bg: #F5D5C8;
   --border: rgba(0, 0, 0, 0.08);
   --border-solid: #c0c0c0;
-  --font: 'Be Vietnam Pro', sans-serif;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.12);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --claude-color: #AE5630;
   --chatgpt-color: #10A37F;
   --gemini-color: #4285F4;
   --grok-color: #FF6600;
+}
+
+html.theme-dark {
+  --bg-primary: #2b2a27;
+  --bg-card: #1f1e1b;
+  --text-primary: #eeeeee;
+  --text-secondary: #9a9893;
+  --accent: #D4663C;
+  --accent-hover: #E0764C;
+  --accent-light: rgba(212, 102, 60, 0.16);
+  --notes-bg: #3a2e26;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-solid: #3a3935;
+  --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  html.theme-auto {
+    --bg-primary: #2b2a27;
+    --bg-card: #1f1e1b;
+    --text-primary: #eeeeee;
+    --text-secondary: #9a9893;
+    --accent: #D4663C;
+    --accent-hover: #E0764C;
+    --accent-light: rgba(212, 102, 60, 0.16);
+    --notes-bg: #3a2e26;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-solid: #3a3935;
+    --shadow-card: 0 2px 14px rgba(0, 0, 0, 0.6);
+  }
 }
 
 *,
@@ -30,8 +70,6 @@ html {
 
 body {
   width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
   min-height: 100vh;
   font-family: var(--font);
   background: var(--bg-primary);
@@ -54,6 +92,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: var(--bg-primary);
 }
 
 .view[hidden] {
@@ -68,26 +107,28 @@ a:hover {
   align-items: center;
   justify-content: center;
   padding: 14px 20px;
-  background: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  background: var(--bg-primary);
 }
 
 .header-center {
   display: flex;
   align-items: center;
   gap: 8px;
+  background-color: var(--bg-primary);
 }
 
 .header--settings {
   justify-content: flex-start;
   gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .logo-small {
   flex-shrink: 0;
   line-height: 0;
+  background-color: var(--bg-primary);
 }
 
 .header-title {
@@ -281,18 +322,116 @@ a:hover {
 /* ===================== */
 /* Filter bar            */
 /* ===================== */
+.list-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  padding-bottom: 12px;
+}
+
+/* ===================== */
+/* Current chat section  */
+/* ===================== */
+.current-chat-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 12px 0;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+}
+
+.current-chat-section[hidden] {
+  display: none;
+}
+
+/* Current Chat Section icon. Supports two modes:
+   (a) colored SVG via background-image (Claude/Gemini/Perplexity/DeepSeek) —
+       SVG file embeds brand colors.
+   (b) monochrome theme-adaptive via mask-image + background-color (GPT/Grok) —
+       the SVG is used as a silhouette; color follows --text-primary.
+   JS (sidepanel-current-chat.js applyPlatformIcon) picks the mode at render. */
+.cc-icon {
+  flex-shrink: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.cc-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-empty {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.cc-button {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.cc-button--save {
+  background: var(--accent);
+  color: #FFFFFF;
+  border: 1px solid var(--accent);
+}
+
+.cc-button--save:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.cc-button--saved {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.cc-button--saved:hover {
+  background: var(--accent-light);
+}
+
 .filter-bar {
   padding: 10px 12px 0;
   background: var(--bg-primary);
-  position: sticky;
-  top: 49px;
-  z-index: 9;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .filter-row-platforms {
+  display: flex;
+  align-items: center;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -306,6 +445,77 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Platform chip pager — paginates the chip row.
+   Logic (sidepanel.js) is generic over PLATFORM_ORDER / PLATFORMS_PER_PAGE.
+   JS measures page 1's rendered width to size the viewport AND to drive
+   track.style.transform = translateX(-N*pageWidth) for page N. */
+.platform-pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.platform-pager-viewport {
+  overflow: hidden;
+  flex: 0 1 auto;
+  min-width: 0;
+  /* Explicit width is set by JS (initPlatformPager) to match page 1's content. */
+}
+
+.platform-pager-track {
+  display: flex;
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+}
+
+.platform-pager-page {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+/* Plain icon button, matches .btn-settings — no border, no container chrome.
+   Padding is asymmetric (right = 0) so the arrow icon's right edge aligns with
+   the gear icon one row below for a clean vertical column of right-side controls. */
+.platform-pager-arrow {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 4px 0 4px 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  line-height: 0;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.platform-pager-arrow:hover {
+  color: var(--accent);
+}
+
+.platform-pager-arrow-icon {
+  transition: transform 0.2s ease-out;
+}
+
+.platform-pager-arrow.flipped .platform-pager-arrow-icon {
+  transform: scaleX(-1);
+}
+
+.platform-pager-arrow.has-offpage-filter::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1.5px solid var(--bg-primary);
 }
 
 .platform-chips {
@@ -355,6 +565,55 @@ a:hover {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+}
+
+/* Theme-adaptive variant: monochrome SVG masked + colored via --text-primary.
+   Used for GPT and Grok whose brand is monochrome. Colored-brand icons
+   (Claude, Gemini, Perplexity, DeepSeek) keep the plain <img> path above. */
+.chip-icon--themed {
+  display: inline-block;
+  background-color: var(--text-primary);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.chip-icon--gpt {
+  -webkit-mask-image: url('../icons/platform-gpt.svg');
+  mask-image: url('../icons/platform-gpt.svg');
+}
+
+.chip-icon--grok {
+  -webkit-mask-image: url('../icons/platform-grok.svg');
+  mask-image: url('../icons/platform-grok.svg');
+}
+
+/* Same pattern inside card tag pills (12px size). */
+.platform-mask-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  background-color: var(--text-primary);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.platform-mask-icon--gpt {
+  -webkit-mask-image: url('../icons/platform-gpt.svg');
+  mask-image: url('../icons/platform-gpt.svg');
+}
+
+.platform-mask-icon--grok {
+  -webkit-mask-image: url('../icons/platform-grok.svg');
+  mask-image: url('../icons/platform-grok.svg');
 }
 
 /* Search */
@@ -418,7 +677,7 @@ a:hover {
   gap: 8px;
   width: 100%;
   padding: 8px 12px;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border: 1px solid var(--border-solid);
   border-radius: 8px;
   font-family: var(--font);
@@ -448,7 +707,7 @@ a:hover {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border: 1px solid var(--border-solid);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -477,6 +736,37 @@ a:hover {
   color: var(--accent);
 }
 
+/* Drop-hover state while a chat card is being dragged over a folder row. */
+.folder-dropdown-item.drop-hover {
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.folder-dropdown-item.drop-hover.active {
+  color: #FFFFFF;
+}
+
+/* Dashed outline on the folder selector while a chat drag is active, signaling
+   "this is a drop target" even before the dropdown opens. */
+.folder-selector-wrapper.drop-ready .folder-selector {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+.folder-dropdown-item--archive {
+  color: var(--text-secondary);
+}
+
+.folder-dropdown-item--archive.active {
+  color: var(--accent);
+}
+
+.folder-dropdown-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 /* ===================== */
 /* Main list             */
 /* ===================== */
@@ -484,6 +774,7 @@ a:hover {
   flex: 1;
   overflow-y: auto;
   padding-bottom: 8px;
+  background: var(--bg-primary);
 }
 
 .section-header {
@@ -501,18 +792,57 @@ a:hover {
   padding: 0 8px;
 }
 
-/* Chat card */
-.chat-card {
+/* Empty Archive view */
+.archive-empty {
   display: flex;
   flex-direction: column;
-  background: #FFFFFF;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px 24px;
+  gap: 6px;
+}
+
+/* Restore the native [hidden] semantics; `.archive-empty { display: flex }` above
+   would otherwise win over the user-agent [hidden] { display: none } rule. */
+.archive-empty[hidden] {
+  display: none;
+}
+
+.archive-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.archive-empty-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  /* No max-width — the explicit <br> in markup is the sole line-break
+     controller, so a narrow container can't force extra wrapping. */
+}
+
+/* Chat card */
+.chat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 80px;
+  background: var(--bg-card);
   border-radius: 7px;
   cursor: default;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* While being dragged (HTML5 drag-and-drop to a folder). */
+.chat-card.dragging {
+  opacity: 0.7;
+  transform: scale(0.98);
 }
 
 .chat-card-header {
   display: flex;
-  padding: 12px 14px 8px;
+  padding: 12px 58px 8px 14px;
   gap: 8px;
 }
 
@@ -535,10 +865,40 @@ a:hover {
   color: var(--accent);
 }
 
+/* Search highlight — injected via <mark> in createChatCard when searchQuery
+   is non-empty. Built with textContent so user input never touches innerHTML. */
+.chat-title mark {
+  background: var(--accent-light);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: inherit;
+}
+
+.chat-title.editing {
+  cursor: text;
+  outline: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px 1px;
+}
+
+.chat-title.editing:hover {
+  color: var(--text-primary);
+}
+
 .chat-meta {
   font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.3;
+}
+
+/* Card footer: tags on left, 3-dot menu on right */
+.chat-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 46px 10px 14px;
 }
 
 /* Tags row (platform + folder) */
@@ -546,7 +906,8 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 0 14px 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .tag-pill {
@@ -576,13 +937,28 @@ a:hover {
 }
 
 .tag-pill--grok {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  background: var(--border);
+}
+
+.tag-pill--perplexity {
+  color: #1E9FA8;
+  background: rgba(34, 184, 205, 0.12);
+}
+
+.tag-pill--deepseek {
+  color: #FFFFFF;
+  background: #4D6BFE;
 }
 
 .tag-pill--folder {
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--border);
+}
+
+.tag-pill--archived {
+  color: var(--text-secondary);
+  background: var(--border);
 }
 
 .tag-pill svg {
@@ -590,13 +966,14 @@ a:hover {
   height: 10px;
 }
 
-/* Card actions (star + menu) */
+/* Card actions (star + pencil) — pinned to top-right of the card */
 .chat-actions {
+  position: absolute;
+  top: 10px;
+  right: 12px;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  padding-top: 2px;
 }
 
 .btn-icon {
@@ -665,7 +1042,9 @@ a:hover {
 
 /* 3-dot menu */
 .card-menu-wrapper {
-  position: relative;
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
 }
 
 .btn-menu {
@@ -684,17 +1063,18 @@ a:hover {
   color: var(--accent);
 }
 
+/* Position is fixed so the menu escapes the card's overflow and the list scroll
+   container; placement (top / right / bottom / left / maxHeight) is set inline
+   by positionDropdown() in sidepanel.js based on trigger rect + available space. */
 .card-menu {
   display: none;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  background: #FFFFFF;
+  position: fixed;
+  background: var(--bg-card);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
   border: 1px solid var(--border);
   min-width: 150px;
-  z-index: 20;
+  z-index: 50;
   overflow: hidden;
 }
 
@@ -744,7 +1124,7 @@ a:hover {
 }
 
 .modal-card {
-  background: #FFFFFF;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 24px;
   max-width: 260px;
@@ -906,13 +1286,7 @@ a:hover {
 }
 
 .settings-section {
-  margin-bottom: 24px;
-}
-
-.settings-section-title {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .settings-folder-list {
@@ -927,7 +1301,7 @@ a:hover {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
 
@@ -985,21 +1359,15 @@ a:hover {
   outline: none;
 }
 
+/* Explicit placeholder styling so the hint reads as muted in both themes
+   (the UA default can render too dark when the input also sets `color`). */
+.settings-folder-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
 .settings-folder-input:focus {
   border-color: var(--accent);
-}
-
-.settings-about {
-  padding: 12px;
-  background: #FFFFFF;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text-secondary);
-}
-
-.settings-about a {
-  font-size: 13px;
 }
 
 .settings-empty {
@@ -1007,6 +1375,229 @@ a:hover {
   text-align: center;
   font-size: 13px;
   color: var(--text-secondary);
+}
+
+/* Section header — small muted label with separator underneath */
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Appearance → theme radio group */
+.settings-theme-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg-card);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.settings-theme-option:last-child {
+  border-bottom: none;
+}
+
+.settings-theme-option input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-solid);
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.settings-theme-option input[type="radio"]:checked {
+  border-color: var(--accent);
+}
+
+.settings-theme-option input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.settings-theme-label {
+  flex: 1;
+}
+
+.settings-theme-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Data section rows */
+.settings-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.settings-data-row:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.settings-data-row:last-child {
+  border-radius: 0 0 8px 8px;
+  border-bottom: none;
+}
+
+.settings-data-row:only-child {
+  border-radius: 8px;
+}
+
+.settings-data-label {
+  color: var(--text-primary);
+}
+
+.settings-data-value {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.btn-secondary {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border-solid);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Support section — horizontal button row */
+.settings-support {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-support .btn-secondary {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* About block */
+.settings-about {
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.settings-about p {
+  color: var(--text-primary);
+}
+
+.settings-about a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.settings-about a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* Inline settings toast */
+.settings-toast {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.settings-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.settings-toast--error {
+  background: rgba(212, 60, 60, 0.08);
+  color: #D43C3C;
+}
+
+/* Global toast — bottom-center; fades in/out via .visible class from showAppToast. */
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translate(-50%, 10px);
+  max-width: 80%;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 200;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* Text selection overrides */
@@ -1018,6 +1609,8 @@ a:hover {
 .chat-actions,
 .chip,
 .folder-selector,
-.tag-pill {
+.tag-pill,
+.settings-section-title {
   user-select: none;
+  -webkit-user-select: none;
 }

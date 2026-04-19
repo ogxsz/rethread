@@ -1,11 +1,9 @@
-export const VERSION = '1.0.0';
+export const VERSION = '1.4.0';
 
 export const MESSAGE_TYPES = {
   SAVE_CHAT: 'SAVE_CHAT',
-  CHAT_SAVED: 'CHAT_SAVED',
-  CHECK_CHAT: 'CHECK_CHAT',
-  CHAT_STATUS: 'CHAT_STATUS',
   GET_CURRENT_CHAT: 'GET_CURRENT_CHAT',
+  CURRENT_CHAT_UPDATE: 'CURRENT_CHAT_UPDATE',
   UPDATE_CHAT: 'UPDATE_CHAT',
   DELETE_CHAT: 'DELETE_CHAT',
   CREATE_FOLDER: 'CREATE_FOLDER',
@@ -22,6 +20,8 @@ export const STORAGE_KEYS = {
 export const DEFAULTS = {
   settings: {
     onboardingDone: false,
+    theme: 'auto',
+    sortBy: 'savedAt',
     version: VERSION
   },
   meta: {

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=320">
   <title>ReThread</title>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
@@ -94,35 +93,67 @@
 
   <!-- Main list -->
   <div id="view-list" class="view" hidden>
-    <header class="header">
-      <div class="header-center">
-        <div class="logo-small">
-          <img src="../icons/logo.svg" width="28" height="28">
+    <div class="list-header-sticky">
+      <header class="header">
+        <div class="header-center">
+          <div class="logo-small">
+            <img src="../icons/logo.svg" width="28" height="28">
+          </div>
+          <span class="header-title">ReThread</span>
         </div>
-        <span class="header-title">ReThread</span>
-      </div>
-    </header>
+      </header>
 
-    <!-- Filter bar: 3 rows -->
-    <div class="filter-bar">
-      <!-- Row 1: Platform chips -->
+      <!-- Current chat section (populated by sidepanel-current-chat.js) -->
+      <div id="current-chat-section" class="current-chat-section" hidden>
+        <span class="cc-icon" aria-hidden="true"></span>
+        <span class="cc-title"></span>
+        <span class="cc-empty" hidden>Start a chat to save it</span>
+        <button type="button" class="cc-button" hidden></button>
+      </div>
+
+      <!-- Filter bar: 3 rows -->
+      <div class="filter-bar">
+      <!-- Row 1: Platform chips (paginated) -->
       <div class="filter-row-platforms">
-        <div class="platform-chips">
-          <button class="chip" data-platform="claude">
-            <img class="chip-icon" src="../icons/platform-claude.svg" width="14" height="14">
-            Claude
-          </button>
-          <button class="chip" data-platform="chatgpt">
-            <img class="chip-icon" src="../icons/platform-gpt.svg" width="14" height="14">
-            GPT
-          </button>
-          <button class="chip" data-platform="gemini">
-            <img class="chip-icon" src="../icons/platform-gemini.svg" width="14" height="14">
-            Gemini
-          </button>
-          <button class="chip" data-platform="grok">
-            <img class="chip-icon" src="../icons/platform-grok.svg" width="14" height="14">
-            Grok
+        <div class="platform-pager">
+          <div class="platform-pager-viewport">
+            <div class="platform-pager-track">
+              <div class="platform-pager-page" data-page="1">
+                <div class="platform-chips">
+                  <button class="chip" data-platform="claude">
+                    <img class="chip-icon" src="../icons/platform-claude.svg" width="14" height="14">
+                    Claude
+                  </button>
+                  <button class="chip" data-platform="chatgpt">
+                    <span class="chip-icon chip-icon--themed chip-icon--gpt" aria-hidden="true"></span>
+                    GPT
+                  </button>
+                  <button class="chip" data-platform="gemini">
+                    <img class="chip-icon" src="../icons/platform-gemini.svg" width="14" height="14">
+                    Gemini
+                  </button>
+                  <button class="chip" data-platform="grok">
+                    <span class="chip-icon chip-icon--themed chip-icon--grok" aria-hidden="true"></span>
+                    Grok
+                  </button>
+                </div>
+              </div>
+              <div class="platform-pager-page" data-page="2">
+                <div class="platform-chips">
+                  <button class="chip" data-platform="perplexity">
+                    <img class="chip-icon" src="../icons/perplexity-color.svg" width="14" height="14">
+                    Perplexity
+                  </button>
+                  <button class="chip" data-platform="deepseek">
+                    <img class="chip-icon" src="../icons/deepseek-color.svg" width="14" height="14">
+                    DeepSeek
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button id="platform-pager-arrow" class="platform-pager-arrow" type="button" title="Switch platform page">
+            <svg class="platform-pager-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
           </button>
         </div>
       </div>
@@ -149,6 +180,19 @@
           <!-- populated by JS -->
         </div>
       </div>
+
+      <!-- Row 4: Sort selector -->
+      <div class="folder-selector-wrapper sort-selector-wrapper">
+        <button id="sort-selector" class="folder-selector">
+          <svg class="folder-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          <span id="sort-selector-text">Sort: Recently saved</span>
+          <svg class="chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="sort-dropdown" class="folder-dropdown">
+          <!-- populated by JS -->
+        </div>
+      </div>
+      </div>
     </div>
 
     <div class="list-content">
@@ -157,8 +201,18 @@
         <div id="pinned-list" class="chat-list"></div>
       </section>
       <section id="section-recent">
-        <h2 class="section-header">Recent saved</h2>
-        <div id="recent-list" class="chat-list"></div>
+        <!-- Headers + chat-list blocks rendered by sidepanel.js based on sort + search state. -->
+      </section>
+      <section id="section-archive-empty" class="archive-empty" hidden>
+        <h3 class="archive-empty-title">Archived chats appear here.</h3>
+        <p class="archive-empty-subtitle">
+          They stay searchable but are hidden<br>
+          from your main list.
+        </p>
+      </section>
+      <section id="section-list-empty" class="archive-empty" hidden>
+        <h3 class="archive-empty-title"></h3>
+        <p class="archive-empty-subtitle"></p>
       </section>
     </div>
   </div>
@@ -174,6 +228,24 @@
 
     <div class="settings-content">
       <section class="settings-section">
+        <h3 class="settings-section-title">Appearance</h3>
+        <div class="settings-theme-group">
+          <label class="settings-theme-option">
+            <input type="radio" name="theme" value="auto">
+            <span class="settings-theme-label">Auto <span class="settings-theme-hint">(matches system)</span></span>
+          </label>
+          <label class="settings-theme-option">
+            <input type="radio" name="theme" value="light">
+            <span class="settings-theme-label">Light</span>
+          </label>
+          <label class="settings-theme-option">
+            <input type="radio" name="theme" value="dark">
+            <span class="settings-theme-label">Dark</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-section">
         <h3 class="settings-section-title">Folders</h3>
         <div id="settings-folder-list" class="settings-folder-list">
           <!-- populated by JS -->
@@ -185,11 +257,46 @@
       </section>
 
       <section class="settings-section">
+        <h3 class="settings-section-title">Data</h3>
+        <div class="settings-data-group">
+          <div class="settings-data-row">
+            <span class="settings-data-label">Export all data</span>
+            <button id="btn-export-data" class="btn-secondary" type="button">Export JSON</button>
+          </div>
+          <div class="settings-data-row">
+            <span class="settings-data-label">Import from file</span>
+            <button id="btn-import-data" class="btn-secondary" type="button">Import JSON</button>
+            <input id="import-file-input" type="file" accept="application/json,.json" hidden>
+          </div>
+          <div class="settings-data-row">
+            <span class="settings-data-label">Storage usage</span>
+            <span id="settings-storage-usage" class="settings-data-value">&mdash;</span>
+          </div>
+        </div>
+        <div id="settings-data-toast" class="settings-toast" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="settings-section">
+        <h3 class="settings-section-title">Support</h3>
+        <div class="settings-support">
+          <a class="btn-secondary" href="https://github.com/ogxsz/rethread/" target="_blank" rel="noopener noreferrer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Star on GitHub
+          </a>
+          <a class="btn-secondary" href="https://github.com/ogxsz/rethread/issues" target="_blank" rel="noopener noreferrer">
+            <svg width="14" height="14" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M15.4156 8.06221C15.2462 8.75139 14.9418 9.4001 14.5198 9.97073C14.0979 10.5414 13.5669 11.0226 12.9576 11.3864C12.3489 11.7499 11.674 11.9888 10.9721 12.0894C10.2703 12.1899 9.55547 12.1501 8.86914 11.9722C8.71379 11.9297 8.54989 11.9297 8.39455 11.9722C8.24236 12.0069 8.10267 12.0829 7.9908 12.1918L4.96905 15.2305C4.85343 15.3408 4.71911 15.4295 4.57238 15.4926C4.42226 15.555 4.26106 15.5863 4.09851 15.5847C3.93824 15.5864 3.77936 15.555 3.63172 15.4926C3.48423 15.4309 3.34967 15.342 3.23505 15.2305L1.77093 13.7643C1.6565 13.6521 1.56718 13.5169 1.50884 13.3676C1.38638 13.0655 1.38638 12.7276 1.50884 12.4255C1.56718 12.2763 1.6565 12.1411 1.77093 12.0289L4.80047 8.99721C4.9117 8.88884 4.99024 8.7514 5.02714 8.60055C5.06964 8.45251 5.06964 8.29596 5.02714 8.14721C4.78439 7.2171 4.79546 6.23891 5.05919 5.31453C5.32293 4.39015 5.82968 3.55338 6.52668 2.89138C7.21774 2.23304 8.0734 1.77303 9.00372 1.55971C9.93942 1.33567 10.9186 1.37242 11.8349 1.66596C11.9229 1.69157 12.0025 1.73978 12.0661 1.80577C12.1296 1.87176 12.1747 1.95324 12.1969 2.04209C12.2191 2.13094 12.2176 2.22406 12.1927 2.31218C12.1677 2.40029 12.12 2.48032 12.0545 2.5443L9.98759 4.61971C9.73727 4.89266 9.59609 5.24815 9.59093 5.61847C9.58181 5.78074 9.63502 5.94037 9.73968 6.06472L10.9573 7.29013C11.049 7.35705 11.1542 7.40313 11.2655 7.42515C11.3768 7.44717 11.4916 7.44461 11.6019 7.41763C11.9022 7.37631 12.1831 7.24549 12.408 7.04222L14.4749 4.9668C14.5405 4.90353 14.6208 4.85748 14.7085 4.83276C14.7963 4.80804 14.8888 4.80542 14.9778 4.82513C15.0673 4.84706 15.1496 4.8919 15.2165 4.95523C15.2834 5.01857 15.3328 5.09823 15.3596 5.18638C15.639 6.12211 15.6579 7.11621 15.4156 8.06221Z" fill="currentColor"/></svg>
+            Report issue
+          </a>
+        </div>
+      </section>
+
+      <section class="settings-section">
         <h3 class="settings-section-title">About</h3>
         <div class="settings-about">
-          <p>ReThread v1.0.0 by Monceau</p>
-          <p><a href="https://github.com" target="_blank">GitHub</a></p>
-          <p><a href="https://github.com" target="_blank">Report issue</a></p>
+          <p>ReThread <span id="settings-version">v—</span></p>
+          <p>Made by <a href="https://x.com/mnceth" target="_blank" rel="noopener noreferrer">Monceau</a></p>
+          <p><a href="https://github.com/ogxsz/rethread/" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+          <p><a href="https://github.com/ogxsz/rethread/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Privacy Policy</a></p>
         </div>
       </section>
     </div>
@@ -235,6 +342,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Global toast (drag-and-drop feedback, etc.) -->
+  <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
 
   <script type="module" src="sidepanel.js"></script>
 </body>

@@ -1,7 +1,6 @@
 // ReThread Platform Configurations
 // Loaded as a content script before content-script.js (no ES module imports)
-// To add a new platform: add an entry here, update manifest.json matches,
-// add CSS rules in content/content-styles.css with :host(.platform-<id>)
+// To add a new platform: add an entry here and update manifest.json matches.
 
 // eslint-disable-next-line no-unused-vars
 var PLATFORMS = {
@@ -13,11 +12,6 @@ var PLATFORMS = {
     getTitle: function () {
       return (document.title || '').replace(/\s*[-\u2013\u2014]\s*Claude\s*$/, '').trim() || 'Untitled chat';
     },
-    getButtonAnchor: function () {
-      // Floating position (CSS handles placement) — override for anchored injection
-      return null;
-    },
-    buttonPosition: 'afterend',
     icon: '../icons/platform-claude.svg',
     cssClass: null
   },
@@ -33,10 +27,6 @@ var PLATFORMS = {
         .replace(/^ChatGPT\s*$/, '')
         .trim() || 'Untitled chat';
     },
-    getButtonAnchor: function () {
-      return null;
-    },
-    buttonPosition: 'afterend',
     icon: '../icons/platform-gpt.svg',
     cssClass: 'platform-chatgpt'
   },
@@ -52,10 +42,6 @@ var PLATFORMS = {
         .replace(/\s*[-\u2013\u2014]\s*Gemini\s*$/, '')
         .trim() || 'Untitled chat';
     },
-    getButtonAnchor: function () {
-      return null;
-    },
-    buttonPosition: 'fixed',
     icon: '../icons/platform-gemini.svg',
     cssClass: 'platform-gemini'
   },
@@ -70,11 +56,35 @@ var PLATFORMS = {
         .replace(/\s*[-\u2013\u2014]\s*Grok\s*$/, '')
         .trim() || 'Untitled chat';
     },
-    getButtonAnchor: function () {
-      return null;
-    },
-    buttonPosition: 'fixed',
     icon: '../icons/platform-grok.svg',
     cssClass: 'platform-grok'
+  },
+
+  perplexity: {
+    id: 'perplexity',
+    name: 'Perplexity',
+    hostnames: ['perplexity.ai', 'www.perplexity.ai'],
+    chatUrlPattern: /\/search\/([a-zA-Z0-9_-]+)/,
+    getTitle: function () {
+      return (document.title || '')
+        .replace(/\s*[-\u2013\u2014]\s*Perplexity\s*$/, '')
+        .trim() || 'Untitled chat';
+    },
+    icon: '../icons/perplexity-color.svg',
+    cssClass: 'platform-perplexity'
+  },
+
+  deepseek: {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    hostnames: ['chat.deepseek.com'],
+    chatUrlPattern: /\/a\/chat\/s\/([a-f0-9-]+)/,
+    getTitle: function () {
+      return (document.title || '')
+        .replace(/\s*[-\u2013\u2014]\s*DeepSeek\s*$/, '')
+        .trim() || 'Untitled chat';
+    },
+    icon: '../icons/deepseek-color.svg',
+    cssClass: 'platform-deepseek'
   }
 };

@@ -113,6 +113,39 @@ export async function migrateStorage() {
 
 
     }
+
+    // 1.2.0 — archive feature: add isArchived / archivedAt to every chat.
+    // Idempotent: fields only written if undefined; gate flips after first write.
+    if (meta.version < '1.2.0') {
+      const chats = data[STORAGE_KEYS.CHATS] || {};
+      let changed = false;
+      for (const chatId of Object.keys(chats)) {
+        if (chats[chatId].isArchived === undefined) {
+          chats[chatId].isArchived = false;
+          changed = true;
+        }
+        if (chats[chatId].archivedAt === undefined) {
+          chats[chatId].archivedAt = null;
+          changed = true;
+        }
+      }
+      meta.version = VERSION;
+      const updates = { [STORAGE_KEYS.META]: meta };
+      if (changed) updates[STORAGE_KEYS.CHATS] = chats;
+      await chrome.storage.local.set(updates);
+    }
+
+    // 1.3.0 — settings.theme default. Idempotent via `=== undefined` gate.
+    if (meta.version < '1.3.0') {
+      const stored = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+      const settings = stored[STORAGE_KEYS.SETTINGS] || {};
+      if (settings.theme === undefined) settings.theme = 'auto';
+      meta.version = VERSION;
+      await chrome.storage.local.set({
+        [STORAGE_KEYS.SETTINGS]: settings,
+        [STORAGE_KEYS.META]: meta
+      });
+    }
   } catch (e) {
     console.error('ReThread: migration failed', e);
   }
@@ -184,7 +217,9 @@ export async function deleteChat(chatId) {
 export async function getSettings() {
   try {
     const data = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-    return data[STORAGE_KEYS.SETTINGS] || { ...DEFAULTS.settings };
+    // Merge stored settings over the defaults so any new field added to
+    // DEFAULTS.settings is transparently available on existing installs.
+    return { ...DEFAULTS.settings, ...(data[STORAGE_KEYS.SETTINGS] || {}) };
   } catch (e) {
     console.error('ReThread: failed to get settings', e);
     return { ...DEFAULTS.settings };
